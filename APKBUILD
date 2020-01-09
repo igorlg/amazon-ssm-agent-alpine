@@ -1,0 +1,68 @@
+pkgname="amazon-ssm-agent"
+pkgdesc="Amazon SSM Client and Agent"
+pkgver="2.3.786.0"
+pkgrel=0
+license="Apache License 2.0"
+url="https://github.com/aws/${pkgname}"
+arch="all"
+
+depends=""
+makedepends="go"
+
+provides="cmd:amazon-ssm-agent"
+provides="cmd:ssm-document-worker"
+provides="cmd:ssm-session-worker"
+provides="cmd:ssm-session-logger"
+provides="cmd:ssm-cli"
+
+install="$pkgname.post-install $pkgname.pre-upgrade $pkgname.post-upgrade $pkgname.pre-deinstall"
+
+builddir="$srcdir/$pkgname-$pkgver"
+source="${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz"
+sha512sums="d4b492160f1761e3897ce5131f49e47a6c208c1c8b0bca4667ae59bd44c9cff57691c2553e830107db840f80f1c3bbe754a7b773216274900efc4c47a9b3ee8b  amazon-ssm-agent-2.3.786.0.tar.gz"
+
+gobuild() {
+	output="$1"
+	shift
+	CC=`which musl-gcc` \
+	go build --ldflags '-w -linkmode external -extldflags "-static"' \
+	-o $output \
+	-v $@
+}
+
+build() {
+	cd "$builddir"
+	export GOPATH=`pwd`/vendor:`pwd`
+	ln -s `pwd` vendor/src/github.com/aws/amazon-ssm-agent
+	gobuild bin/amazon-ssm-agent agent/agent.go agent/agent_unix.go agent/agent_parser.go
+	gobuild bin/ssm-document-worker agent/framework/processor/executer/outofproc/worker/main.go
+	gobuild bin/ssm-session-worker agent/framework/processor/executer/outofproc/sessionworker/main.go
+	gobuild bin/ssm-session-logger agent/session/logging/main.go
+	gobuild bin/ssm-cli agent/cli-main/cli-main.go
+	# -- Strip symbols from Assembler (man strip)
+	for i in `ls bin/`; do
+		echo "strip --strip-unneeded bin/$i"
+		strip --strip-unneeded bin/$i
+	done
+
+	cp -v "$startdir"/amazon-ssm.rc-service "$builddir"/amazon-ssm.rc-service
+}
+
+package() {
+	# Binaries
+	install -Dm 755 "$builddir"/bin/amazon-ssm-agent "$pkgdir"/usr/bin/amazon-ssm-agent
+	install -Dm 755 "$builddir"/bin/ssm-document-worker "$pkgdir"/usr/bin/ssm-document-worker
+	install -Dm 755 "$builddir"/bin/ssm-session-worker "$pkgdir"/usr/bin/ssm-session-worker
+	install -Dm 755 "$builddir"/bin/ssm-session-logger "$pkgdir"/usr/bin/ssm-session-logger
+	install -Dm 755 "$builddir"/bin/ssm-cli "$pkgdir"/usr/bin/ssm-cli
+	# Config/Templates
+	install -Dm 644 "$builddir"/amazon-ssm-agent.json.template "$pkgdir"/etc/amazon/ssm/amazon-ssm-agent.json.template
+	install -Dm 644 "$builddir"/seelog_unix.xml "$pkgdir"/etc/amazon/ssm/seelog.xml
+	# Service
+	install -Dm 755 "$builddir"/amazon-ssm.rc-service "$pkgdir"/etc/init.d/amazon-ssm
+	# Log File
+	install -Dm 600 "$startdir"/empty "$pkgdir"/var/log/amazon/ssm/amazon-ssm-agent.log
+	install -Dm 600 "$startdir"/empty "$pkgdir"/var/log/amazon/ssm/errors.log
+	# install -Dm 700 "$startdir"/empty "$pkgdir"/var/lib/amazon/ssm/.empty
+	mkdir -p -m 700 "${pkgdir}"/var/lib/amazon/ssm
+}

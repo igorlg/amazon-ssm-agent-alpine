@@ -1,0 +1,8 @@
+#!/bin/sh
+
+addgroup ssm-user
+adduser -h /home/ssm-user -s /bin/sh -G ssm-user -D ssm-user
+addgroup ssm-user wheel
+passwd -u ssm-user
+
+rc-service amazon-ssm start

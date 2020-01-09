@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+command="${SSM_BINARY:-/usr/bin/amazon-ssm-agent}"
+command_background=true
+pidfile="/var/run/amazon-ssm-agent.pid"
+
+rc_ulimit="${SSM_ULIMIT:--c unlimited -n 1048576 -u unlimited}"
+SSM_LOGFILE="${SSM_LOGFILE:-/var/log/${RC_SVCNAME}.log}"
+
+# start_stop_daemon_args=""
+# extra_started_commands="reload"
+
+depend() {
+	need sysfs
+}
