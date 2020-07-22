@@ -12,3 +12,4 @@ SSM_LOGFILE="${SSM_LOGFILE:-/var/log/${RC_SVCNAME}.log}"
 depend() {
 	need sysfs
 }
+

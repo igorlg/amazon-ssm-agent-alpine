@@ -1,10 +1,11 @@
 pkgname="amazon-ssm-agent"
 pkgdesc="Amazon SSM Client and Agent"
-pkgver="2.3.786.0"
 pkgrel=0
 license="Apache License 2.0"
 url="https://github.com/aws/${pkgname}"
 arch="all"
+
+pkgver="SED_PKGVER"
 
 depends=""
 makedepends="go"
@@ -19,7 +20,6 @@ install="$pkgname.post-install $pkgname.pre-upgrade $pkgname.post-upgrade $pkgna
 
 builddir="$srcdir/$pkgname-$pkgver"
 source="${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz"
-sha512sums="d4b492160f1761e3897ce5131f49e47a6c208c1c8b0bca4667ae59bd44c9cff57691c2553e830107db840f80f1c3bbe754a7b773216274900efc4c47a9b3ee8b  amazon-ssm-agent-2.3.786.0.tar.gz"
 
 gobuild() {
 	output="$1"
@@ -66,3 +66,6 @@ package() {
 	# install -Dm 700 "$startdir"/empty "$pkgdir"/var/lib/amazon/ssm/.empty
 	mkdir -p -m 700 "${pkgdir}"/var/lib/amazon/ssm
 }
+
+sha512sums="d4b492160f1761e3897ce5131f49e47a6c208c1c8b0bca4667ae59bd44c9cff57691c2553e830107db840f80f1c3bbe754a7b773216274900efc4c47a9b3ee8b  amazon-ssm-agent-2.3.786.0.tar.gz"
+
