@@ -9,7 +9,7 @@ all: ${VERSIONS}
 %:
 	@if [[ "$@" != "all" ]]; then \
 		echo "Building package version $@"; \
-		sed 's/SED_PKGVER/$@/g' APKBUILD.template > APKBUILD; \
+		sed -e 's/SED_PKGVER/$@/g' -e "s/SED_PKGSUM/" APKBUILD.template > APKBUILD; \
 		grep "^pkgver" APKBUILD; \
 	fi
 
