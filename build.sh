@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/ash
 
 set -e -o pipefail
 
@@ -10,5 +10,7 @@ SUM="$(grep $VER $SUMFILE | awk '{print $2}')"
 
 echo "Building version: $VER checksum: $SUM"
 
-sed -e "s/SED_PKGVER/$VER/g -e "s/SED_PKGSUM/$SUM/g" $TMPLFILE > APKBUILD
+sed -e "s/SED_PKGVER/$VER/g" -e "s/SED_PKGSUM/$SUM/g" $TMPLFILE > APKBUILD
+
+abuild -rF
 
