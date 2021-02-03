@@ -22,12 +22,7 @@ phases:
     run-as: Linux-user-name
     runtime-versions:
       runtime: version
-      runtime: version
     commands:
-      - command
-      - command
-    finally:
-      - command
       - command
   pre_build:
     # same as install
@@ -37,15 +32,6 @@ phases:
     commands:
       - abuild checksum  # From https://wiki.alpinelinux.org/wiki/APKBUILD_Reference#md5sums.2Fsha256sums.2Fsha512sums
 
-reports:
-  report-group-name-or-arn:
-    files:
-      - location
-      - location
-    base-directory: location
-    discard-paths: no | yes
-    file-format: JunitXml | NunitXml | CucumberJson | VisualStudioTrx | TestNGXml
-
 artifacts:
   files:
     - location
@@ -53,23 +39,4 @@ artifacts:
   name: artifact-name
   discard-paths: no | yes
   base-directory: location
-#   secondary-artifacts:
-#     artifactIdentifier:
-#       files:
-#         - location
-#         - location
-#       name: secondary-artifact-name
-#       discard-paths: no | yes
-#       base-directory: location
-#     artifactIdentifier:
-#       files:
-#         - location
-#         - location
-#       discard-paths: no | yes
-#       base-directory: location
-
-# cache:
-#   paths:
-#     - path
-#     - path
 

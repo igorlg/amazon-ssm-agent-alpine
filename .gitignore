@@ -1,4 +1,11 @@
 APKBUILD
 
+.abuild/
+.ash_history
+.cache/
+
 src/
+
+**/*.tar.gz
+**/*.zip
 
