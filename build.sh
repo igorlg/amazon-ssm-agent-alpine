@@ -12,7 +12,7 @@ echo "Building version: $VER checksum: $SUM"
 
 sed -e "s/SED_PKGVER/$VER/g" -e "s/SED_PKGSUM/$SUM/g" $TMPLFILE > APKBUILD
 
-diff APKBUILD APKBUILD.template
+# diff APKBUILD APKBUILD.template
 
-# abuild -rF
+abuild -rF
 

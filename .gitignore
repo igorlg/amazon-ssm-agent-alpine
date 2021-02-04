@@ -4,6 +4,7 @@ APKBUILD
 .ash_history
 .cache/
 
+pkg/
 src/
 
 **/*.tar.gz
