@@ -6,10 +6,17 @@ pidfile="/var/run/amazon-ssm-agent.pid"
 rc_ulimit="${SSM_ULIMIT:--c unlimited -n 1048576 -u unlimited}"
 SSM_LOGFILE="${SSM_LOGFILE:-/var/log/${RC_SVCNAME}.log}"
 
-# start_stop_daemon_args=""
-# extra_started_commands="reload"
-
 depend() {
-	need sysfs
+	need net
+}
+
+# Overwriting stop function as the default implementation doesn't wait enough
+# for the amazon-ssm-agent to kill child processes before exiting gracefully
+stop() {
+    ebegin "Stoping amazon-ssm"
+    start-stop-daemon --stop \
+        --pidfile $pidfile \
+        --retry 60
+    eend $?
 }
 

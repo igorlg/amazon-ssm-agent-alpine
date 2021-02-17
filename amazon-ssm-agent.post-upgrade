@@ -1,3 +1,4 @@
 #!/bin/sh
 
+# Start the service
 rc-service amazon-ssm start

@@ -1,48 +1,60 @@
+# Maintainer: Igor Londero Gentil <igor.lg@gmail.com>
+# Contributor: Paulo Miguel Almeida Rodenas <paulo.miguel.almeida.rodenas@gmail.com>
+
 pkgname="amazon-ssm-agent"
 pkgdesc="Amazon SSM Client and Agent"
 pkgrel=0
 license="Apache License 2.0"
 url="https://github.com/aws/${pkgname}"
-arch="all"
+#TODO replace that with sed or some better mechanism
+arch="x86_64"
 
 pkgver="SED_PKGVER"
 
 depends=""
-makedepends="go"
+makedepends="go make git"
+options="!check"
 
 provides="cmd:amazon-ssm-agent"
 provides="cmd:ssm-document-worker"
 provides="cmd:ssm-session-worker"
+provides="cmd:ssm-agent-worker"
 provides="cmd:ssm-session-logger"
 provides="cmd:ssm-cli"
+provides="cmd:updater"
 
 install="$pkgname.post-install $pkgname.pre-upgrade $pkgname.post-upgrade $pkgname.pre-deinstall"
-
-builddir="$srcdir/$pkgname-$pkgver"
 source="${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz"
 
-gobuild() {
-	output="$1"
-	shift
-	CC=`which musl-gcc` \
-	go build --ldflags '-w -linkmode external -extldflags "-static"' \
-	-o $output \
-	-v $@
-}
+builddir="$srcdir/$pkgname-$pkgver"
+outbinfld="linux_amd64"
+elf_magic_header="\x7f\x45\x4c"
+
 
 build() {
 	cd "$builddir"
+
+    # Override the VERSION (major version only) file with the release version (actual)
+    echo -n "${pkgver}" > VERSION
+
+    # This is regrettably necessary as otherwise, the amazon-ssm-agent version will show
+    # a different version on the console.
 	export GOPATH=`pwd`/vendor:`pwd`
 	ln -s `pwd` vendor/src/github.com/aws/amazon-ssm-agent
-	gobuild bin/amazon-ssm-agent agent/agent.go agent/agent_unix.go agent/agent_parser.go
-	gobuild bin/ssm-document-worker agent/framework/processor/executer/outofproc/worker/main.go
-	gobuild bin/ssm-session-worker agent/framework/processor/executer/outofproc/sessionworker/main.go
-	gobuild bin/ssm-session-logger agent/session/logging/main.go
-	gobuild bin/ssm-cli agent/cli-main/cli-main.go
-	# -- Strip symbols from Assembler (man strip)
-	for i in `ls bin/`; do
-		echo "strip --strip-unneeded bin/$i"
-		strip --strip-unneeded bin/$i
+	make clean pre-build
+	rm vendor/src/github.com/aws/amazon-ssm-agent
+	unset GOPATH
+
+    # Finally build the binaries
+	make build-linux
+
+	# Strip symbols from Assembler (man strip)
+    for i in `ls bin/$outbinfld`; do
+        # check if it's a ELF binary using its magic number header
+		if grep -q "$elf_magic_header" bin/$outbinfld/$i ; then
+			echo "strip --strip-unneeded bin/$outbinfld/$i"
+			strip --strip-unneeded bin/$outbinfld/$i
+		fi
 	done
 
 	cp -v "$startdir"/amazon-ssm.rc-service "$builddir"/amazon-ssm.rc-service
@@ -50,21 +62,28 @@ build() {
 
 package() {
 	# Binaries
-	install -Dm 755 "$builddir"/bin/amazon-ssm-agent "$pkgdir"/usr/bin/amazon-ssm-agent
-	install -Dm 755 "$builddir"/bin/ssm-document-worker "$pkgdir"/usr/bin/ssm-document-worker
-	install -Dm 755 "$builddir"/bin/ssm-session-worker "$pkgdir"/usr/bin/ssm-session-worker
-	install -Dm 755 "$builddir"/bin/ssm-session-logger "$pkgdir"/usr/bin/ssm-session-logger
-	install -Dm 755 "$builddir"/bin/ssm-cli "$pkgdir"/usr/bin/ssm-cli
+	for i in `ls $builddir/bin/$outbinfld`; do
+        # check if it's a ELF binary using its magic number header
+        if grep -q "$elf_magic_header" $builddir/bin/$outbinfld/$i ; then
+            install -Dm 755 "$builddir"/bin/$outbinfld/$i "$pkgdir"/usr/bin/$i
+        fi
+    done
+
 	# Config/Templates
 	install -Dm 644 "$builddir"/amazon-ssm-agent.json.template "$pkgdir"/etc/amazon/ssm/amazon-ssm-agent.json.template
 	install -Dm 644 "$builddir"/seelog_unix.xml "$pkgdir"/etc/amazon/ssm/seelog.xml
+
 	# Service
 	install -Dm 755 "$builddir"/amazon-ssm.rc-service "$pkgdir"/etc/init.d/amazon-ssm
-	# Log File
-	install -Dm 600 "$startdir"/empty "$pkgdir"/var/log/amazon/ssm/amazon-ssm-agent.log
-	install -Dm 600 "$startdir"/empty "$pkgdir"/var/log/amazon/ssm/errors.log
-	# install -Dm 700 "$startdir"/empty "$pkgdir"/var/lib/amazon/ssm/.empty
-	mkdir -p -m 700 "${pkgdir}"/var/lib/amazon/ssm
+
+	# Sudoers
+	install -Dm 440 "$startdir"/templates/ssm-agent-users "$pkgdir"/etc/sudoers.d/ssm-agent-users
+
+	# Log Files
+	install -Dm 600 "$startdir"/templates/empty "$pkgdir"/var/log/amazon/ssm/amazon-ssm-agent.log
+	install -Dm 600 "$startdir"/templates/empty "$pkgdir"/var/log/amazon/ssm/errors.log
+	install -Dm 700 "$startdir"/templates/empty "$pkgdir"/var/lib/amazon/ssm/.empty
+
 }
 
 sha512sums="SED_PKGSUM  amazon-ssm-agent-SED_PKGVER.tar.gz"

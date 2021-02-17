@@ -1,8 +1,20 @@
 #!/bin/sh
 
+##########################################################################################
+# Rationale
+##########################################################################################
+#   ssm-agent tries to create a user called ssm-user during the first session.
+#     https://github.com/aws/amazon-ssm-agent/blob/21c85d674bbb44dd13cd8738d1b9d86658a6b18e/agent/session/shell/shell_unix.go#L126
+#   The problem is the the command executed by it isn't compatible with busybox commands
+#   Having said that, I'm creating the user so the application doesn't fail
+
+# Creates ssm-user used by the application
 addgroup ssm-user
 adduser -h /home/ssm-user -s /bin/sh -G ssm-user -D ssm-user
-addgroup ssm-user wheel
 passwd -u ssm-user
 
+# start the service
 rc-service amazon-ssm start
+
+# Set it to auto start during the booting phase
+rc-update add amazon-ssm default

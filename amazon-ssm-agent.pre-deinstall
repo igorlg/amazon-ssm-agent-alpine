@@ -1,3 +1,10 @@
 #!/bin/sh
 
+# Remove it from the list of services that runs during the startup
+rc-update del amazon-ssm default
+
+# Stop the service
 rc-service amazon-ssm stop
+
+# Delete user/group
+deluser --remove-home ssm-user
