@@ -6,8 +6,7 @@ pkgdesc="Amazon SSM Client and Agent"
 pkgrel=0
 license="Apache License 2.0"
 url="https://github.com/aws/${pkgname}"
-#TODO replace that with sed or some better mechanism
-arch="x86_64"
+arch="x86_64 aarch64"
 
 pkgver="SED_PKGVER"
 
@@ -27,12 +26,21 @@ install="$pkgname.post-install $pkgname.pre-upgrade $pkgname.post-upgrade $pkgna
 source="${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz"
 
 builddir="$srcdir/$pkgname-$pkgver"
-outbinfld="linux_amd64"
 elf_magic_header="\x7f\x45\x4c"
-
 
 build() {
 	cd "$builddir"
+
+	# Adjust make targets and output paths based on which architecture this is running against
+	# At this point makes no sense to deal with more arch types since travis CI doesn't support other
+	# archs that alpine can run on
+    if [ $(uname -m) == 'x86_64' ]; then
+      outbinfld="linux_amd64"
+      maketarget="build-linux"
+    else
+      outbinfld="linux_arm64"
+      maketarget="build-arm64"
+    fi
 
     # Override the VERSION (major version only) file with the release version (actual)
     echo -n "${pkgver}" > VERSION
@@ -46,11 +54,10 @@ build() {
 	unset GOPATH
 
     # Finally build the binaries
-	make build-linux
+	make ${maketarget}
 
 	# Strip symbols from Assembler (man strip)
     for i in `ls bin/$outbinfld`; do
-        # check if it's a ELF binary using its magic number header
 		if grep -q "$elf_magic_header" bin/$outbinfld/$i ; then
 			echo "strip --strip-unneeded bin/$outbinfld/$i"
 			strip --strip-unneeded bin/$outbinfld/$i
@@ -61,9 +68,15 @@ build() {
 }
 
 package() {
+    # Adjust output path based on arch used to build this package
+    if [ $(uname -m) == 'x86_64' ]; then
+      outbinfld="linux_amd64"
+    else
+      outbinfld="linux_arm64"
+    fi
+
 	# Binaries
 	for i in `ls $builddir/bin/$outbinfld`; do
-        # check if it's a ELF binary using its magic number header
         if grep -q "$elf_magic_header" $builddir/bin/$outbinfld/$i ; then
             install -Dm 755 "$builddir"/bin/$outbinfld/$i "$pkgdir"/usr/bin/$i
         fi
