@@ -34,30 +34,30 @@ build() {
 	# Adjust make targets and output paths based on which architecture this is running against
 	# At this point makes no sense to deal with more arch types since travis CI doesn't support other
 	# archs that alpine can run on
-    if [ $(uname -m) == 'x86_64' ]; then
-      outbinfld="linux_amd64"
-      maketarget="build-linux"
-    else
-      outbinfld="linux_arm64"
-      maketarget="build-arm64"
-    fi
+	if [ $(uname -m) == 'x86_64' ]; then
+		outbinfld="linux_amd64"
+		maketarget="build-linux"
+	else
+		outbinfld="linux_arm64"
+		maketarget="build-arm64"
+	fi
 
-    # Override the VERSION (major version only) file with the release version (actual)
-    echo -n "${pkgver}" > VERSION
+	# Override the VERSION (major version only) file with the release version (actual)
+	echo -n "${pkgver}" > VERSION
 
-    # This is regrettably necessary as otherwise, the amazon-ssm-agent version will show
-    # a different version on the console.
+	# This is regrettably necessary as otherwise, the amazon-ssm-agent version will show
+	# a different version on the console.
 	export GOPATH=`pwd`/vendor:`pwd`
 	ln -s `pwd` vendor/src/github.com/aws/amazon-ssm-agent
 	make clean pre-build
 	rm vendor/src/github.com/aws/amazon-ssm-agent
 	unset GOPATH
 
-    # Finally build the binaries
+	# Finally build the binaries
 	make ${maketarget}
 
 	# Strip symbols from Assembler (man strip)
-    for i in `ls bin/$outbinfld`; do
+	for i in `ls bin/$outbinfld`; do
 		if grep -q "$elf_magic_header" bin/$outbinfld/$i ; then
 			echo "strip --strip-unneeded bin/$outbinfld/$i"
 			strip --strip-unneeded bin/$outbinfld/$i
@@ -68,19 +68,19 @@ build() {
 }
 
 package() {
-    # Adjust output path based on arch used to build this package
-    if [ $(uname -m) == 'x86_64' ]; then
-      outbinfld="linux_amd64"
-    else
-      outbinfld="linux_arm64"
-    fi
+	# Adjust output path based on arch used to build this package
+	if [ $(uname -m) == 'x86_64' ]; then
+		outbinfld="linux_amd64"
+	else
+		outbinfld="linux_arm64"
+	fi
 
 	# Binaries
 	for i in `ls $builddir/bin/$outbinfld`; do
-        if grep -q "$elf_magic_header" $builddir/bin/$outbinfld/$i ; then
-            install -Dm 755 "$builddir"/bin/$outbinfld/$i "$pkgdir"/usr/bin/$i
-        fi
-    done
+		if grep -q "$elf_magic_header" $builddir/bin/$outbinfld/$i ; then
+			install -Dm 755 "$builddir"/bin/$outbinfld/$i "$pkgdir"/usr/bin/$i
+		fi
+	done
 
 	# Config/Templates
 	install -Dm 644 "$builddir"/amazon-ssm-agent.json.template "$pkgdir"/etc/amazon/ssm/amazon-ssm-agent.json.template

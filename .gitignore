@@ -6,7 +6,9 @@ APKBUILD
 
 pkg/
 src/
+target/
 
 **/*.tar.gz
 **/*.zip
+**/*.apk
 

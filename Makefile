@@ -1,16 +1,26 @@
-# VERFILES := $(wildcard versions/*)
-# VERSIONS := $(VERFILES:versions/%=%)
+VERSIONS := $(shell ./list_versions.sh)
+TARGETS  := $(VERSIONS:%=target/amazon-ssm-agent-%-r0.apk)
 
-VERSIONS := $(shell awk -e '{print $1}' SSM-VERSIONS)
-SED := "gsed"
-
-all: ${VERSIONS}
-
-%:
-	@if [[ "$@" != "all" ]]; then \
-		$(CURDIR)/build.sh $@; \
-	fi
+DOCKER_IMAGE = ssmbuild
+APK_ROOT     = /root/packages/x86_64
 
 .DEFAULT_GOAL := all
-.PHONY = all
+.PHONY: all clean purge ${VERSIONS}
+
+all: ${TARGETS}
+
+target/amazon-ssm-agent-%-r0.apk: %
+	docker run --name $(DOCKER_IMAGE)-$< $(DOCKER_IMAGE) /data/build.sh $<
+	docker cp $(DOCKER_IMAGE)-$<:$(APK_ROOT)/amazon-ssm-agent-$<-r0.apk $@
+	docker rm $(DOCKER_IMAGE)-$<
+
+prepare:
+	docker build -t $(DOCKER_IMAGE) .
+	mkdir -p target/
+
+clean:
+	rm -vfr APKBUILD target/
+
+purge: clean
+	docker rmi $(DOCKER_IMAGE)
 
