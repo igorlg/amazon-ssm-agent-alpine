@@ -3,12 +3,14 @@ version: 0.2
 env:
   variables:
     ssm_version: 0.0.0.0
+    AWS_ACCOUNT_ID: 718758479978
 
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - make prepare
   build:
     commands:
       - echo Build started on `date`

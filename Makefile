@@ -10,12 +10,12 @@ APK_ROOT     = /root/packages/x86_64
 all: ${TARGETS}
 
 target/amazon-ssm-agent-%-r0.apk: %
-	docker run --name $(DOCKER_IMAGE)-$< $(DOCKER_IMAGE) /data/build.sh $<
-	docker cp $(DOCKER_IMAGE)-$<:$(APK_ROOT)/amazon-ssm-agent-$<-r0.apk $@
-	docker rm $(DOCKER_IMAGE)-$<
+	docker run --name ssmbuild-$< $(DOCKER_IMAGE) /data/build.sh $<
+	docker cp ssmbuild-$<:$(APK_ROOT)/amazon-ssm-agent-$<-r0.apk $@
+	docker rm ssmbuild-$<
 
 prepare:
-	docker build -t $(DOCKER_IMAGE) .
+	docker pull $(DOCKER_IMAGE)
 	mkdir -p target/
 
 clean:
