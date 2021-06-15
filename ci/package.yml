@@ -1,0 +1,23 @@
+version: 0.2
+
+env:
+  variables:
+    SSM_VERSION: 3.0.1209.0
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building Docker image
+      - make $SSM_VERSION
+
+artifacts:
+  files:
+    - target/amazon-ssm-agent-$SSM_VERSION-r0.apk
+  name: amazon-ssm-agent
+  discard-paths: yes
+
