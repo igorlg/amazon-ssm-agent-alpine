@@ -1,0 +1,20 @@
+version: 0.2
+
+batch:
+  build-matrix:
+    static:
+      env:
+        type: LINUX_CONTAINER
+        image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        privileged-mode: true
+    dynamic:
+      buildspec:
+        - ci/package.yml
+      env:
+        variables:
+          SSM_VERSION:
+            - 3.0.1209.0
+            - 3.0.1181.0
+            - 3.0.1124.0
+            - 3.0.1031.0
+

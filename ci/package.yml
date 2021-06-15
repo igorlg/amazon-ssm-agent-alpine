@@ -1,9 +1,5 @@
 version: 0.2
 
-env:
-  variables:
-    SSM_VERSION: 3.0.1209.0
-
 phases:
   pre_build:
     commands:
