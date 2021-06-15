@@ -24,6 +24,7 @@ if [ $curl_status -eq 0 ]; then
 	# Replace vars in the template
 	echo "[Info] :: Building version: ${version_param} checksum: ${checksum}"
 	sed -e "s/SED_PKGVER/${version_param}/g" -e "s/SED_PKGSUM/${checksum}/g" APKBUILD.template > APKBUILD
+	rm -f APKBUILD.template
 
 	# Build
 	echo "[Info] :: Buckle up and grab a coffee ... this might take a while"
@@ -31,4 +32,3 @@ if [ $curl_status -eq 0 ]; then
 else
 	echo "[Error] :: ${github_archive_url} doesn't seem to exist. Have you specified the right version. Aborting..."
 fi
-
