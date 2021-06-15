@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    ssm_version: 0.0.0.0
+    SSM_VERSION: 0.0.0.0
     AWS_ACCOUNT_ID: 718758479978
 
 phases:
@@ -14,11 +14,11 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - make target/amazon-ssm-agent-${ssm_version}.apk
+      - make target/amazon-ssm-agent-$SSM_VERSION-r0.apk
 
 artifacts:
   files:
     - 'target/*.apk'
-  name: amazon-ssm-agent-$ssm_version
+  name: amazon-ssm-agent-$SSM_VERSION
   discard-paths: yes
 
