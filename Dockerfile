@@ -1,14 +1,15 @@
-FROM alpine AS build
+FROM alpine
 
 WORKDIR /data
 
 # Install dependencies
 RUN apk update \
- && apk add make abuild sudo go git build-base
+ && apk add abuild sudo build-base make go git
 
 # amazon-ssm-agent runs some bash scripts
 RUN apk add bash
 
+# Install rc-service so we can test the package
 # This 'enables' the openrc in case /sbin/init wasn't the pid 1
 RUN apk add openrc \
  && mkdir -p /run/openrc \
