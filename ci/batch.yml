@@ -25,7 +25,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building Docker image
-      - make $SSM_VERSION
+      - make target/amazon-ssm-agent-$SSM_VERSION-r0.apk
 
 artifacts:
   files:
