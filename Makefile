@@ -1,12 +1,14 @@
-# VERSIONS := $(shell ./list_versions.sh)
+# Temporary hack, until I can use the list_versions script.
+# VERSIONS := $(shell ./ci/list_versions.sh)
 VERSIONS := $(shell cat ci/SSM_VERSIONS)
+
 TARGETS  := $(VERSIONS:%=target/amazon-ssm-agent-%-r0.apk)
 
 DOCKER_IMAGE = 718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/ssm-agent-alpine-build
 APK_ROOT     = /root/packages/x86_64
 
 .DEFAULT_GOAL := all
-.PHONY: all clean purge ${VERSIONS} base-image
+.PHONY: all clean purge ${VERSIONS} codebuild-baseimage
 
 all: ${TARGETS}
 
@@ -24,7 +26,7 @@ target/amazon-ssm-agent-%-r0.apk: %
 build-base-image:
 	docker build -t $(DOCKER_IMAGE):latest .
 
-codebuild-base-image:
+codebuild-baseimage:
 	./ci/codebuild-local.sh \
 		-c -d \
 		-i aws/codebuild/amazonlinux2-x86_64-standard:3.0 \

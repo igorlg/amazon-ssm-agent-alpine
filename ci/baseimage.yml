@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_ACCOUNT_ID: 718758479978
+    AWS_DEFAULT_REGION: ap-southeast-2
     IMAGE_REPO_NAME: ssm-agent-alpine-build
     IMAGE_TAG: latest
 
