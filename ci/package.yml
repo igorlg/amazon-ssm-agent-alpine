@@ -18,7 +18,7 @@ phases:
 
 artifacts:
   files:
-    - 'target/*.apk'
+    - target/amazon-ssm-agent-$SSM_VERSION-r0.apk
   name: amazon-ssm-agent-$SSM_VERSION
   discard-paths: yes
 
