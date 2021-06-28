@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Continuous Integration for project
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: The name of the project being built. This name will be used on a number of resources.
+    Default: MyAwesomeProject
+  ProjectParameterOverrides:
+    Type: String
+    Description: JSON string for the parameters of the project template.
+    Default: "{}"
+  GitHubOAuthToken:
+    Type: String
+    Description: GitHub oauth token.  This user must have admin access to the repo.
+    Default: "****"
+    NoEcho: true
+  GitHubRepoOwner:
+    Type: String
+    Description: GitHub repo owner.
+  GitHubRepo:
+    Type: String
+    Description: GitHub git repo.
+    Default: amazon-ssm-agent-alpine
+  GitHubBranch:
+    Type: String
+    Description: Git branch to build off of.
+    Default: master
+  DeploymentArtifactBucket:
+    Type: String
+    Description: The S3 Bucket to upload the built artifacts
+  CodeBuildComputeType:
+    Type: String
+    Description: CodeBuild Compute environment type
+    Default: BUILD_GENERAL1_SMALL
+    AllowedValues:
+      - BUILD_GENERAL1_SMALL
+      - BUILD_GENERAL1_MEDIUM
+      - BUILD_GENERAL1_LARGE
+
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      Policies:
+        - PolicyName: CodeBuildServicePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::codepipeline-${AWS::Region}-*/*"
+                  - !Sub "arn:aws:s3:::${DeploymentArtifactBucket}/*"
+  
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref ProjectName
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: linuxContainer
+        ComputeType: !Ref CodeBuildComputeType
+        Image: aws/codebuild/standard:5.0
+        EnvironmentVariables:
+          - Name: BUILD_ARTIFACT_BUCKET
+            Value: !Ref DeploymentArtifactBucket
+      Source:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+
+  # CodePipeline
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+  CodePipelineServiceRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: CodePipelineServicePolicy
+      Roles:
+        - !Ref CodePipelineServiceRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: "arn:aws:logs:*:*:*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:PutObject
+            Resource: !Sub "arn:aws:s3:::${DeploymentArtifactBucket}/*"
+          - Effect: Allow
+            Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Resource: !GetAtt CodeBuildProject.Arn
+  
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              OutputArtifacts:
+                - Name: SourceCodeOutputArtifact
+              Configuration:
+                Owner: !Ref GitHubRepoOwner
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubOAuthToken
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: SourceCodeOutputArtifact
+              OutputArtifacts:
+                - Name: BuildOutputArtifact
+              Configuration:
+                ProjectName: !Ref ProjectName
+              RunOrder: 1
+      ArtifactStore:
+        Type: S3
+        Location: !Ref DeploymentArtifactBucket
+      Name: !Ref ProjectName
+
