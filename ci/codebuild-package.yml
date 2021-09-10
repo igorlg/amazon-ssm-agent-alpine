@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     SSM_VERSION: 0.0.0.0
+    SSM_PARAM_LAST_BUILT_VERSION: /alpine-ssm-agent-build/last_built_version
     AWS_ACCOUNT_ID: 718758479978
     AWS_DEFAULT_REGION: ap-southeast-2
 
@@ -16,6 +17,9 @@ phases:
     commands:
       - echo Build started on `date`
       - make target/amazon-ssm-agent-$SSM_VERSION-r0.apk
+  post_build:
+    commands:
+      - aws ssm put-parameter --name $SSM_PARAM_LAST_BUILT_VERSION --value $SSM_VERSION --type 'String' --overwrite
 
 artifacts:
   files:
