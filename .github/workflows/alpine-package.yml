@@ -2,6 +2,8 @@
 name: Build SSM Alpine Package
 
 on:
+  push:
+    branches: [ add-ci ]
   workflow_dispatch:
     inputs:
       ssmVersion:
@@ -46,4 +48,3 @@ jobs:
         with:
           name: amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk
           path: target/amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk
-
