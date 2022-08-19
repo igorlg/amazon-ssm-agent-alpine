@@ -13,7 +13,7 @@ env:
   DOCKER_IMAGE_NAME: 718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/ssm-agent-alpine-build
 
 jobs:
-  build-ssm-alpine-pkg:
+  build_ssm_alpine_pkg:
     runs-on: ubuntu-latest
     permissions:
       id-token: write

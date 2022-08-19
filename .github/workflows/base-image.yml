@@ -4,6 +4,7 @@ name: Publish packages to Alpinist
 on:
   push:
     paths-ignore:
+      - .github/workflows/alpine-package.yml
       - Makefile
       - LICENSE
       - README.md
