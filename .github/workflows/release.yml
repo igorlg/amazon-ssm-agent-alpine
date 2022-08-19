@@ -35,6 +35,12 @@ jobs:
       - name: Build image
         run: |
           docker build -t ${{ env.DOCKER_IMAGE_NAME }}:latest .
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to ECR
+        run: |
           docker push ${{ env.DOCKER_IMAGE_NAME }}:latest
 
 
