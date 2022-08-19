@@ -33,12 +33,13 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Pull Docker image
-        run: |
-          docker pull ${{ env.DOCKER_IMAGE_NAME }}
+      # - name: Pull Docker image
+      #   run: |
+      #     docker pull ${{ env.DOCKER_IMAGE_NAME }}
       
       - name: Build APK file
         run: |
+          make --version
           make ${{ inputs.ssmVersion }}
 
       - name: Add package to Releases
