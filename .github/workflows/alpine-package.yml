@@ -46,3 +46,4 @@ jobs:
         with:
           name: amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk
           path: target/amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk
+
