@@ -17,6 +17,9 @@ jobs:
   base_image_build:
     name: Build base Docker image
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout code
