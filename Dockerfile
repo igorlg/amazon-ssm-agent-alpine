@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine
+FROM golang:1.17-alpine
 
 WORKDIR /data
 
@@ -28,4 +28,3 @@ COPY amazon-ssm-agent.pre-upgrade    /data/
 COPY amazon-ssm.rc-service           /data/
 COPY build.sh                        /data/
 COPY templates/                      /data/templates/
-
