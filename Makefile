@@ -2,15 +2,24 @@ SHELL:=/bin/bash
 
 # Temporary hack, until I can use the list_versions script.
 VERSIONS := $(shell ./list_versions.sh)
+LATEST_VERSION := $(shell ./list_versions.sh | head -1)
 TARGETS  := $(VERSIONS:%=target/amazon-ssm-agent-%-r0.apk)
 
-DOCKER_IMAGE = 718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/ssm-agent-alpine--agent-alpine-build
+DOCKER_IMAGE = ssm-agent-alpine-build
 APK_ROOT     = /root/packages/x86_64
 
 .DEFAULT_GOAL := all
 .PHONY: all clean purge $(VERSIONS)
 
 all: $(VERSIONS)
+latest: $(LATEST_VERSION)
+
+versions:
+	@echo "Latest version"
+	@echo "$(LATEST_VERSION)"
+	@echo ""
+	@echo "Available versions to build:"
+	@for i in $(VERSIONS); do echo $$i; done
 
 $(TARGETS):%:
 $(VERSIONS):%:target/amazon-ssm-agent-%-r0.apk
