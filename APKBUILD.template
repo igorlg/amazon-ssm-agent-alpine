@@ -48,6 +48,7 @@ build() {
 	# This is regrettably necessary as otherwise, the amazon-ssm-agent version will show
 	# a different version on the console.
 	export GOPATH=`pwd`/vendor:`pwd`
+	mkdir -p vendor/src/github.com/aws/
 	ln -s `pwd` vendor/src/github.com/aws/amazon-ssm-agent
 	make clean pre-build
 	rm vendor/src/github.com/aws/amazon-ssm-agent
@@ -100,4 +101,3 @@ package() {
 }
 
 sha512sums="SED_PKGSUM  amazon-ssm-agent-SED_PKGVER.tar.gz"
-
