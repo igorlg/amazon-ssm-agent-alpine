@@ -1,0 +1,47 @@
+name: Build SSM Alpine Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      ssmVersion:
+        required: true
+
+env:
+  AWS_REGION: ap-southeast-2
+  AWS_IAM_ROLE_ARN: arn:aws:iam::718758479978:role/github-actions-oidc-GitHubIAMRole-IPZBDYTOJ1DQ
+  DOCKER_IMAGE_NAME: 718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/ssm-agent-alpine-build
+
+jobs:
+  build-ssm-alpine-pkg:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.AWS_IAM_ROLE_ARN }}
+          role-session-name: samplerolesession
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Pull Docker image
+        run: |
+          docker pull ${{ env.DOCKER_IMAGE_NAME }}
+      
+      - name: Build APK file
+        run: |
+          make ${{ inputs.ssmVersion }}
+
+      - name: Add package to Releases
+        uses: actions/upload-artifact@v3
+        with:
+          name: amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk
+          path: target/amazon-ssm-agent-${{ inputs.ssmVersion }}-r0.apk

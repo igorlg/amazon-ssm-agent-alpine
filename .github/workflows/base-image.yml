@@ -1,0 +1,43 @@
+name: Publish packages to Alpinist
+
+on:
+  push:
+    paths-ignore:
+      - Makefile
+      - LICENSE
+      - README.md
+
+env:
+  AWS_REGION: ap-southeast-2
+  AWS_IAM_ROLE_ARN: arn:aws:iam::718758479978:role/github-actions-oidc-GitHubIAMRole-IPZBDYTOJ1DQ
+  DOCKER_IMAGE_NAME: 718758479978.dkr.ecr.ap-southeast-2.amazonaws.com/ssm-agent-alpine-build
+
+jobs:
+  base_image_build:
+    name: Build base Docker image
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.AWS_IAM_ROLE_ARN }}
+          role-session-name: samplerolesession
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE_NAME }}:latest .
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to ECR
+        run: |
+          docker push ${{ env.DOCKER_IMAGE_NAME }}:latest
