@@ -2,8 +2,6 @@
 name: Build SSM Alpine Package
 
 on:
-  push:
-    branches: [ add-ci ]
   workflow_dispatch:
     inputs:
       ssmVersion:
